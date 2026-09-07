@@ -1,0 +1,10 @@
+{
+  "name": "WarungOS",
+  "short_name": "WarungOS",
+  "description": "Sistem operasi sederhana untuk warung dan toko tradisional.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#f7f5ef",
+  "theme_color": "#1f3a2d",
+  "icons": []
+}

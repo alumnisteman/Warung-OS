@@ -1,0 +1,438 @@
+openapi: 3.1.0
+info:
+  # Do not change the title, if the title changes, the import paths will be broken
+  title: Api
+  version: 0.1.0
+  description: API specification
+servers:
+  - url: /api
+    description: Base API path
+tags:
+  - name: health
+    description: Health operations
+  - name: products
+    description: Product and stock operations
+  - name: sales
+    description: Sales operations
+  - name: dashboard
+    description: Dashboard summaries and activity
+paths:
+  /healthz:
+    get:
+      operationId: healthCheck
+      tags: [health]
+      summary: Health check
+      description: Returns server health status
+      responses:
+        "200":
+          description: Healthy
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HealthStatus"
+  /products:
+    get:
+      operationId: listProducts
+      tags: [products]
+      summary: List products
+      parameters:
+        - name: search
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: stockStatus
+          in: query
+          required: false
+          schema:
+            type: string
+            enum: [all, low, out]
+            default: all
+      responses:
+        "200":
+          description: Product list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Product"
+    post:
+      operationId: createProduct
+      tags: [products]
+      summary: Create a product
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ProductInput"
+      responses:
+        "201":
+          description: Created product
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Product"
+  /products/{id}:
+    patch:
+      operationId: updateProduct
+      tags: [products]
+      summary: Update a product
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ProductUpdate"
+      responses:
+        "200":
+          description: Updated product
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Product"
+        "404":
+          description: Product not found
+    delete:
+      operationId: deleteProduct
+      tags: [products]
+      summary: Delete a product
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Product deleted
+        "404":
+          description: Product not found
+  /sales:
+    get:
+      operationId: listSales
+      tags: [sales]
+      summary: List recent sales
+      parameters:
+        - name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 20
+      responses:
+        "200":
+          description: Recent sales
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Sale"
+    post:
+      operationId: createSale
+      tags: [sales]
+      summary: Record a sale
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SaleInput"
+      responses:
+        "201":
+          description: Created sale
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Sale"
+        "400":
+          description: Invalid sale or insufficient stock
+  /dashboard/summary:
+    get:
+      operationId: getDashboardSummary
+      tags: [dashboard]
+      summary: Get dashboard summary
+      responses:
+        "200":
+          description: Dashboard summary
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DashboardSummary"
+  /dashboard/activity:
+    get:
+      operationId: listActivity
+      tags: [dashboard]
+      summary: List recent activity
+      responses:
+        "200":
+          description: Recent activity
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Activity"
+  /dashboard/restock-recommendations:
+    get:
+      operationId: listRestockRecommendations
+      tags: [dashboard]
+      summary: List restock recommendations
+      responses:
+        "200":
+          description: Restock recommendations
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/RestockRecommendation"
+components:
+  schemas:
+    HealthStatus:
+      type: object
+      properties:
+        status:
+          type: string
+      required:
+        - status
+    Product:
+      type: object
+      required:
+        - id
+        - name
+        - category
+        - purchasePrice
+        - salePrice
+        - stock
+        - lowStockThreshold
+        - unit
+        - stockStatus
+        - createdAt
+        - updatedAt
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        sku:
+          type: ["string", "null"]
+        category:
+          type: string
+        purchasePrice:
+          type: number
+        salePrice:
+          type: number
+        stock:
+          type: integer
+        lowStockThreshold:
+          type: integer
+        unit:
+          type: string
+        stockStatus:
+          type: string
+          enum: [safe, low, out]
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+    ProductInput:
+      type: object
+      required:
+        - name
+        - category
+        - purchasePrice
+        - salePrice
+        - stock
+        - lowStockThreshold
+        - unit
+      properties:
+        name:
+          type: string
+          minLength: 1
+        sku:
+          type: ["string", "null"]
+        category:
+          type: string
+          minLength: 1
+        purchasePrice:
+          type: number
+          minimum: 0
+        salePrice:
+          type: number
+          minimum: 0
+        stock:
+          type: integer
+          minimum: 0
+        lowStockThreshold:
+          type: integer
+          minimum: 0
+        unit:
+          type: string
+          minLength: 1
+    ProductUpdate:
+      type: object
+      properties:
+        name:
+          type: string
+          minLength: 1
+        sku:
+          type: ["string", "null"]
+        category:
+          type: string
+          minLength: 1
+        purchasePrice:
+          type: number
+          minimum: 0
+        salePrice:
+          type: number
+          minimum: 0
+        stock:
+          type: integer
+          minimum: 0
+        lowStockThreshold:
+          type: integer
+          minimum: 0
+        unit:
+          type: string
+          minLength: 1
+    Sale:
+      type: object
+      required:
+        - id
+        - productId
+        - productName
+        - quantity
+        - unitPrice
+        - total
+        - createdAt
+      properties:
+        id:
+          type: integer
+        productId:
+          type: integer
+        productName:
+          type: string
+        quantity:
+          type: integer
+        unitPrice:
+          type: number
+        total:
+          type: number
+        createdAt:
+          type: string
+          format: date-time
+    SaleInput:
+      type: object
+      required:
+        - productId
+        - quantity
+      properties:
+        productId:
+          type: integer
+          minimum: 1
+        quantity:
+          type: integer
+          minimum: 1
+    DashboardSummary:
+      type: object
+      required:
+        - revenueToday
+        - revenueMonth
+        - salesToday
+        - productCount
+        - lowStockCount
+        - weeklyRevenue
+        - topProducts
+      properties:
+        revenueToday:
+          type: number
+        revenueMonth:
+          type: number
+        salesToday:
+          type: integer
+        productCount:
+          type: integer
+        lowStockCount:
+          type: integer
+        weeklyRevenue:
+          type: array
+          items:
+            $ref: "#/components/schemas/RevenuePoint"
+        topProducts:
+          type: array
+          items:
+            $ref: "#/components/schemas/TopProduct"
+    RevenuePoint:
+      type: object
+      required: [label, value]
+      properties:
+        label:
+          type: string
+        value:
+          type: number
+    TopProduct:
+      type: object
+      required: [name, quantity, revenue]
+      properties:
+        name:
+          type: string
+        quantity:
+          type: integer
+        revenue:
+          type: number
+    Activity:
+      type: object
+      required: [id, type, title, description, createdAt]
+      properties:
+        id:
+          type: integer
+        type:
+          type: string
+          enum: [sale, product, stock]
+        title:
+          type: string
+        description:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+    RestockRecommendation:
+      type: object
+      required:
+        - productId
+        - productName
+        - currentStock
+        - suggestedQuantity
+        - avgDailySales
+        - urgency
+        - reason
+      properties:
+        productId:
+          type: integer
+        productName:
+          type: string
+        currentStock:
+          type: integer
+        suggestedQuantity:
+          type: integer
+        avgDailySales:
+          type: number
+        urgency:
+          type: string
+          enum: [urgent, soon, planned]
+        reason:
+          type: string
+

@@ -1,0 +1,28 @@
+kind = "web"
+previewPath = "/"
+title = "WarungOS"
+description = "Aplikasi operasional warung untuk mengelola produk, stok, penjualan, omzet, dan rekomendasi restock secara praktis."
+version = "1.0.0"
+id = "artifacts/warung-os"
+router = "path"
+
+[[services]]
+name = "web"
+paths = [ "/" ]
+localPort = 25707
+
+[services.development]
+run = "pnpm --filter @workspace/warung-os run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/warung-os", "run", "build" ]
+serve = "static"
+publicDir = "artifacts/warung-os/dist/public"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "25707"
+BASE_PATH = "/"
